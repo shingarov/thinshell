@@ -1,9 +1,11 @@
 #
-# python2 -m pudb.run debugme.py
+# In vmil virtualenv:
+# python -m pudb.run debugme.py
 #
 
+import os
 import angr
-p = angr.Project('/home/boris/work/thinshell/vmil19/ppc/jit')
+p = angr.Project(os.getenv("HOME")+'/work/thinshell/vmil19/ppc/jit')
 nZone        = p.loader.main_object.get_symbol('nZoneBuffer').linked_addr
 main         = p.loader.main_object.get_symbol('main').linked_addr
 loadConstant = p.loader.main_object.get_symbol('loadConstant').linked_addr
