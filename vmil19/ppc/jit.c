@@ -22,11 +22,15 @@ void loadConstant(uint32_t x) {
 	generateOri(&nZoneBuffer[1], lo);
 }
 
+void call(void) {
+	goto *nZone;
+}
+
 int main(int arg1, char **_) {
 	uint32_t x = arg1;
 //	uint32_t x = 0x12345678;
 	loadConstant(x);
-	goto *nZone;
+	call();
 	return 0;
 }
 
