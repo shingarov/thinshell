@@ -14,3 +14,6 @@ mips: mips.o
 mips.o: mips.s
 	mipsel-linux-gnu-as -o mips.o mips.s
 
+
+HelloNB.so: HelloNB.c
+	i686-linux-gnu-gcc-9 -ggdb -shared  -o HelloNB.so HelloNB.c -lrt
