@@ -50,7 +50,7 @@ b = x[15:0]
 co.con._value = claripy.Concat(s.solver.BVV(0, 16), b)
 irsb2.pp()
 
-print "*************************"
+print ("*************************")
 
 irsb1.extend(irsb2)
 irsb = irsb1
@@ -59,4 +59,4 @@ irsb.pp()
 result = angr.SimEngineVEX().process(s, irsb).flat_successors[0]
 r3 = result.regs.r3
 result.regs.__dir__()
-print r3
+print (r3)
