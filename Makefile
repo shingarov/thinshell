@@ -24,3 +24,6 @@ DEBUG5="--debug-flags=GDBRecv,GDBSend,Fetch,Decode"
 
 gem5-ppc:
 	$(G5DIR)/build/POWER/gem5.debug $(DEBUG5) $(G5SEPY) -c ppc.elf --wait-gdb=1
+
+# inside gdb:
+# run --debug-flags=GDBRecv,GDBSend,Fetch,Decode /home/boris/work/gem5/configs/example/se.py -c ppc.elf --wait-gdb=1
