@@ -9,11 +9,10 @@
 .section .data
 .skip 120*1024*1024
 
-# Initial text.
+# Initial "thinshell prologue".
+# See TargetAwareX86>>#runThinshellPrologue.
 .section .text
 .globl	_start
 .type	_start, @function
 _start:
-    mov $1, %eax
-    mov $2, %eax
     int3
