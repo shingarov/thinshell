@@ -10,9 +10,8 @@ squeak.o: squeak.s
 G5DIR=/home/boris/work/gem5
 G5SEPY=$(G5DIR)/configs/example/se.py
 
-#DEBUG5=--debug-flags=Exec
 #DEBUG5=--debug-flags=Exec  --debug-file=sqTrace
-DEBUG5=--debug-flags=GDBMisc,GDBRecv,GDBSend
+DEBUG5=--debug-flags=Faults
 
 g5:
 	$(G5DIR)/build/X86/gem5.debug $(DEBUG5) $(G5SEPY) -c squeak.elf --wait-gdb=1

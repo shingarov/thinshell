@@ -3,11 +3,11 @@
 # to the guard page.
 # We start directly from the R/O pages.
 .section .rodata
-.skip 0x100000
+.skip 0x200000
 
 # The R/W area.
 .section .data
-.skip 120*1024*1024
+.skip 200*1024*1024
 
 # Initial "thinshell prologue".
 # See TargetAwareX86>>#runThinshellPrologue.

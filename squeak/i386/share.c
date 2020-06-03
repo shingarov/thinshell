@@ -11,8 +11,8 @@ void* rw;
 
 int shareMemory() {
     off_t guard  = 0x20000;
-    off_t roSize = 0x100000;
-    off_t rwSize = 120 * 1024 * 1024;
+    off_t roSize = 0x200000;
+    off_t rwSize = 200 * 1024 * 1024;
 
     int shm_fd = shm_open("/gem5", O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1) return -1;
