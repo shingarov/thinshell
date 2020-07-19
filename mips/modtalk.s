@@ -1,14 +1,8 @@
 
-    .comm nZone,4194304 # bytes
-    .comm heap, 8388608
-    .comm st,409600
-
-
-
-	.text
-	.align 2  # 4-byte boundary (2^2)
-	.type	__start, @function
-	.globl __start
+.text
+.align 4
+.type	__start, @function
+.globl __start
 
 __start:
     sll $0, $0, 0  # nop
@@ -36,3 +30,9 @@ __start:
     # jump to the nZone
     jalr $16
     nop # delay slot
+
+.data
+    .comm nZone,4194304 # bytes
+    .comm heap, 8388608
+    .comm st,409600
+
