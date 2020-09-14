@@ -1,0 +1,12 @@
+OUTPUT_FORMAT("elf32-powerpc")
+OUTPUT_ARCH(powerpc)
+ENTRY(_start)
+SECTIONS
+{
+  . = 0x20000;
+  .rodata : { *(.rodata) }
+  . = 0x220000;
+  .data : { *(.data) }
+  .text : { *(.text) }
+}
+
