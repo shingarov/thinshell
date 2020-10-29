@@ -2,10 +2,10 @@
 ### Thinshell for running in gem5
 
 squeak.elf: squeak.o
-	powerpc-linux-gnu-ld -static -T Link -o squeak.elf squeak.o
+	powerpc-linux-gnu-ld --oformat elf32-powerpcle -static -T Link -o squeak.elf squeak.o
 
 squeak.o: squeak.s
-	powerpc-linux-gnu-as -o squeak.o squeak.s
+	powerpc-linux-gnu-as -mlittle -o squeak.o squeak.s
 
 G5DIR=/home/boris/work/gem5
 G5SEPY=$(G5DIR)/configs/example/se.py
