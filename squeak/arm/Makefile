@@ -10,11 +10,13 @@ squeak.o: squeak.s
 G5DIR=/home/boris/work/gem5
 G5SEPY=$(G5DIR)/configs/example/se.py
 
-DEBUG5=--debug-flags=Exec,AddrRanges
-#DEBUG5=--debug-flags=Fetch,GDBMisc,GDBAcc
+DEBUG5=--debug-flags=Fetch,Exec,Fault
+#DEBUG5=--debug-flags=GDBMisc,GDBSend,GDBRecv,AddrRanges
 
 g5:
 	$(G5DIR)/build/ARM/gem5.debug $(DEBUG5) $(G5SEPY) -c squeak.elf --wait-gdb=1 --param 'system.shared_backstore = "/gem5"'
+
+#$(G5DIR)/build/ARM/gem5.debug $(DEBUG5) $(G5SEPY) -c squeak.elf --wait-gdb=1 --param 'system.shared_backstore = "/gem5"' -I 40
 
 d5:
 	echo run $(DEBUG5) $(G5SEPY) -c squeak.elf --wait-gdb=1 | xclip -i
