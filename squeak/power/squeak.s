@@ -12,6 +12,8 @@
 
 # Initial "thinshell prologue".
 # See TargetAwareX86>>#runThinshellPrologue.
+# NB: This is NOT the entry point used in Cog simulation,
+# which is set by the Cogit in simulateCogCodeAt: address.
 .section .text
 .globl	_start
 .type	_start, %function
