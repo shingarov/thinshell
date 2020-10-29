@@ -10,7 +10,7 @@ squeak.o: squeak.s
 G5DIR=/home/boris/work/gem5
 G5SEPY=$(G5DIR)/configs/example/se.py
 
-DEBUG5=--debug-flags=Exec
+DEBUG5=--debug-flags=Fetch,Exec,Fault
 #DEBUG5=--debug-flags=GDBMisc,GDBSend,GDBRecv
 
 g5:
@@ -22,7 +22,7 @@ d5:
 
 d5v:
 	echo run $(DEBUG5) $(G5SEPY) -c squeak.elf --wait-gdb=1 | xclip -i
-	vim -c "Termdebug $(G5DIR)/build/POWER/gem5.debug" -c "Break _start" -c "Run $(DEBUG5) $(G5SEPY) -c squeak.elf --wait-gdb=1"
+	vim -c "Termdebug $(G5DIR)/build/POWER/gem5.debug" -c "Break _start" -c "Run $(DEBUG5) $(G5SEPY) -c squeak.elf --wait-gdb=1 --param 'system.shared_backstore = \"/gem5\"'"
 
 
 ###
