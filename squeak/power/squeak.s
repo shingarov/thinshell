@@ -10,6 +10,18 @@
 .section .data
 .skip 200*1024*1024
 
+# Technology experiment/demo only.
+# In real usage these will be C variables just like they are in Slang now.
+.globl stackPointer
+.type stackPointer, %object
+stackPointer:
+.skip 4
+.globl framePointer
+.type framePointer, %object
+framePointer:
+.skip 4
+
+
 # Initial "thinshell prologue".
 # See TargetAwareX86>>#runThinshellPrologue.
 # NB: This is NOT the entry point used in Cog simulation,
