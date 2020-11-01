@@ -1,3 +1,6 @@
+# Thinshell for Target-Agnostic Modtalk on PowerPC
+
+# www.mouritzen.dk/aix-doc/en_US/a_doc_lib/aixassem/alangref/machine.htm
 	.machine ppc
 
 	.section	.data
