@@ -24,6 +24,13 @@ heap:
 _start:
     or 0,0,0 # magic
 
+    lis 1, 0x7fff
+    ori 1, 1, 0xffff
+
+    li 2, 1
+
+    add. 1, 1, 2
+
     mcrxr 0
 
     li 3,42
