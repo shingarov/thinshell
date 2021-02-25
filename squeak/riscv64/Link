@@ -1,0 +1,12 @@
+OUTPUT_FORMAT("elf64-littleriscv", "elf64-littleriscv",
+              "elf64-littleriscv")
+OUTPUT_ARCH(riscv)
+SECTIONS
+{
+  . = 0x20000;
+  .rodata : { *(.rodata) }
+  . = 0x220000;
+  .data : { *(.data) }
+  .text : { *(.text) }
+}
+
