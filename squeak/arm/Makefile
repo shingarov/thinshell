@@ -5,7 +5,7 @@ squeak.elf: squeak.o
 	arm-linux-gnueabihf-ld -static -T Link -o squeak.elf squeak.o
 
 squeak.o: squeak.s
-	arm-linux-gnueabihf-as -o squeak.o squeak.s
+	arm-linux-gnueabihf-as -ggdb -o squeak.o squeak.s
 
 G5DIR=/home/boris/work/gem5
 G5SEPY=$(G5DIR)/configs/example/se.py
