@@ -7,10 +7,10 @@ squeak.elf: squeak.o
 squeak.o: squeak.s
 	powerpc-linux-gnu-as -mlittle -o squeak.o squeak.s
 
-G5DIR=/home/boris/work/gem5
+G5DIR ?=/home/boris/work/gem5
 G5SEPY=$(G5DIR)/configs/example/se.py
 
-DEBUG5=--debug-flags=Fetch,Exec,Fault
+DEBUG5 ?=--debug-flags=Fetch,Exec,Fault
 #DEBUG5=--debug-flags=GDBMisc,GDBSend,GDBRecv
 
 g5:
