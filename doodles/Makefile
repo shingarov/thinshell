@@ -1,4 +1,6 @@
 
+# POWER
+
 # Big-Endian version
 ppc.elf: ppc.o
 	powerpc-linux-gnu-ld -static -o ppc.elf ppc.o
@@ -13,6 +15,15 @@ ppcle.elf: ppcle.o
 
 ppcle.o: ppc.s
 	powerpc-linux-gnu-as -mlittle -g -o ppcle.o ppc.s
+
+# ARM
+
+arm.elf: arm.o
+	arm-linux-gnueabihf-ld -static -o arm.elf arm.o
+
+arm.o: arm.s
+	arm-linux-gnueabihf-as -g -o arm.o arm.s
+
 
 
 # gem5 simulation
