@@ -23,9 +23,10 @@
 
 import pyvex
 import archinfo
-
 from bit_iter import encodingspec_to_iter
 from bitstring import Bits
+
+from senslist import SensitivityList
 
 def termShape(irNode):
     #import pudb ; pu.db
@@ -63,15 +64,48 @@ def findArchInfo(archName):
         return archinfo.ArchPPC32(archinfo.Endness.BE)
     raise NotFoundError(archName)
 
-def shapes(spec, archName):
-    arch = findArchInfo(archName)
-    shapes = {}
-    it = encodingspec_to_iter(spec)
-    for encoding in it:
-        thisSig = str(vexSignature(encoding.bytes, arch))
-        if thisSig not in shapes:
-            shapes[thisSig] = encoding
-    return shapes
+def varBitPositionsFrom(spec, soFar, msb):
+    if not spec:
+        return soFar
+    car = spec[0]
+    if isinstance(car, str):
+        return varBitPositionsFrom(spec[1:], soFar, msb-len(car))
+    l = [msb-pos for pos in range(car)]+soFar
+    return varBitPositionsFrom(spec[1:], l, msb-car)
 
-def shape_specimens(spec, archName):
-    return shapes(spec, archName).values()
+
+
+def varBitPositions(spec):
+    ps = varBitPositionsFrom(spec, [], 31)
+    ps.sort()
+    return ps
+
+class ShapeAnalysis:
+    def __init__(self, spec, archName):
+        arch = findArchInfo(archName)
+        self.specimens = {}
+        k = 0
+        self.shapes = {}
+        self.shapeIndices = {} #reverse of shapes
+        varBits = varBitPositions(spec)
+        varBits.reverse()
+        self.entropy = len(varBits)
+        self.P = [None] * (2**self.entropy)
+        it = encodingspec_to_iter(spec)
+        for encoding in it:
+            thisSig = str(vexSignature(encoding.bytes, arch))
+            if thisSig not in self.specimens:
+                self.specimens[thisSig] = encoding
+                self.shapes[k] = thisSig
+                self.shapeIndices[thisSig] = k
+                k = k+1
+            v = ''.join([('1' if encoding[31-i] else '0') for i in varBits])
+            encodingInt = int(v,2)
+            self.P[encodingInt] = self.shapeIndices[thisSig]
+
+    def getSection(self):
+        return list(self.specimens.values())
+
+    def computeSensitivity(self):
+        sl = SensitivityList(self.entropy)
+        return sl.guess(self.P)
