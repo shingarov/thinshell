@@ -39,6 +39,5 @@ class SensitivityList:
         self.slist[i] = 'x' if x else '!'
         return self.guess(p)
 
-sl = SensitivityList(3)
-g = sl.guess([1, 2, 1, 2, 1, 2, 1, 2])
-import pudb; pu.db
+#sl = SensitivityList(3)
+#g = sl.guess([1, 2, 1, 2, 1, 2, 1, 2])
