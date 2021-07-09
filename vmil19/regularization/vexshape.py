@@ -62,6 +62,8 @@ def vexSignature(code, arch):
 def findArchInfo(archName):
     if archName=='powerpc':
         return archinfo.ArchPPC32(archinfo.Endness.BE)
+    if archName=='armv5':
+        return archinfo.ArchARM()
     raise NotFoundError(archName)
 
 def varBitPositionsFrom(spec, soFar, msb):
