@@ -1,3 +1,4 @@
+from bitstring import Bits
 from itertools import product
 
 def eitherThisOr0(x):
@@ -44,9 +45,18 @@ class SensitivityList:
         l.reverse()
         return l
 
+    def filterRelevantMembers(self, aList):
+        z = list(zip(reversed(self.slist), aList))
+        relevantElems = filter((lambda rel_bit: rel_bit[0]=='!'), z)
+        snd = lambda a: a[1]
+        return list(map(snd, relevantElems))
+
+    def significantSlice(self, bits):
+        return Bits(self.filterRelevantMembers(bits))
+
 def slLetter_to_FieldSpecElement(slLetter):
     if slLetter=='x':
-        return '0'
+        return '1'
     if slLetter=='!':
         return 1
     error("cant have unknown sensitivity this late")
