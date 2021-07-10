@@ -84,6 +84,7 @@ def varBitPositions(spec):
 
 class ShapeAnalysis:
     def __init__(self, spec, archName):
+        self._sensitivity = None
         arch = findArchInfo(archName)
         self.specimens = {}
         k = 0
@@ -110,4 +111,10 @@ class ShapeAnalysis:
 
     def computeSensitivity(self):
         sl = SensitivityList(self.entropy)
-        return sl.guess(self.P)
+        self._sensitivity = sl.guess(self.P)
+
+    @property
+    def sensitivity(self):
+        if not self._sensitivity:
+            self.computeSensitivity()
+        return self._sensitivity
