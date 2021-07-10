@@ -39,5 +39,17 @@ class SensitivityList:
         self.slist[i] = 'x' if x else '!'
         return self.guess(p)
 
+    def asFieldSpec(self):
+        l = list(map(slLetter_to_FieldSpecElement, self.slist))
+        l.reverse()
+        return l
+
+def slLetter_to_FieldSpecElement(slLetter):
+    if slLetter=='x':
+        return '0'
+    if slLetter=='!':
+        return 1
+    error("cant have unknown sensitivity this late")
+
 #sl = SensitivityList(3)
 #g = sl.guess([1, 2, 1, 2, 1, 2, 1, 2])
