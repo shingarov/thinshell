@@ -12,7 +12,6 @@ import pudb ; pu.db
 
 anal = ShapeAnalysis(spec, 'powerpc')
 section = anal.getSection()
-#sens = anal.computeSensitivity()
 sens = anal.sensitivity
 
 fs = sens.asFieldSpec()
