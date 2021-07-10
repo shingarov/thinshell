@@ -18,5 +18,7 @@ sens = anal.sensitivity
 fs = sens.asFieldSpec()
 it = bit_iter.encodingspec_to_iter(fs)
 for varPossibility in it:
-    print("%s -> %d" % (varPossibility.bin, anal.P[varPossibility.uint]))
-spec  = ['001111', '01001', '00011', '00000000', 8]
+    sigBits = sens.significantSlice(varPossibility)
+    print("%s -> %d" % (sigBits.bin, anal.P[varPossibility.uint]))
+
+print(anal.relevantBitPositionsString())

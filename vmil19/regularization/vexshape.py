@@ -76,12 +76,6 @@ def varBitPositionsFrom(spec, soFar, msb):
     return varBitPositionsFrom(spec[1:], l, msb-car)
 
 
-
-def varBitPositions(spec):
-    ps = varBitPositionsFrom(spec, [], 31)
-    ps.sort()
-    return ps
-
 class ShapeAnalysis:
     def __init__(self, spec, archName):
         self._sensitivity = None
@@ -90,9 +84,7 @@ class ShapeAnalysis:
         k = 0
         self.shapes = {}
         self.shapeIndices = {} #reverse of shapes
-        varBits = varBitPositions(spec)
-        varBits.reverse()
-        self.entropy = len(varBits)
+        self.computeVarBitPositions(spec)
         self.P = [None] * (2**self.entropy)
         it = encodingspec_to_iter(spec)
         for encoding in it:
@@ -102,9 +94,18 @@ class ShapeAnalysis:
                 self.shapes[k] = thisSig
                 self.shapeIndices[thisSig] = k
                 k = k+1
-            v = ''.join([('1' if encoding[31-i] else '0') for i in varBits])
-            encodingInt = int(v,2)
+            encodingInt = int(self.variableSlice(encoding), 2)
             self.P[encodingInt] = self.shapeIndices[thisSig]
+
+    def variableSlice(self, full):
+        l = [('1' if full[31-i] else '0') for i in self.varBitPositions]
+        return ''.join(l)
+
+    def computeVarBitPositions(self, spec):
+        self.varBitPositions = varBitPositionsFrom(spec, [], 31)
+        self.varBitPositions.sort()
+        self.varBitPositions.reverse()
+        self.entropy = len(self.varBitPositions)
 
     def getSection(self):
         return list(self.specimens.values())
@@ -118,3 +119,11 @@ class ShapeAnalysis:
         if not self._sensitivity:
             self.computeSensitivity()
         return self._sensitivity
+
+    def relevantBitPositions(self):
+        return self.sensitivity.filterRelevantMembers(self.varBitPositions)
+
+    def relevantBitPositionsString(self):
+        relevantOnes = self.relevantBitPositions()
+        l = lambda pos: '!' if pos in relevantOnes else '.'
+        return ''.join(map(l, range(31,-1,-1)))
