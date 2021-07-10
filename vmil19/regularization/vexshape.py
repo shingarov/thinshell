@@ -29,29 +29,34 @@ from bitstring import Bits
 from senslist import SensitivityList
 
 def termShape(irNode):
-    #import pudb ; pu.db
-    if irNode.__class__==pyvex.stmt.IMark:
+    name = irNode.__class__.__name__
+    return getattr(ShapeDeterminant(), name) (irNode)
+
+class ShapeDeterminant:
+    def IMark(self, irNode):
         return ('IMark')
-    if irNode.__class__==pyvex.stmt.WrTmp:
+
+    def WrTmp(self, irNode):
         return ('WrTmp', irNode.tmp, termShape(irNode.data))
-    if irNode.__class__==pyvex.stmt.Put:
+
+    def Put(self, irNode):
         return ('Put', 'offset', termShape(irNode.data))
-    if irNode.__class__==pyvex.expr.Get:
+
+    def Get(self, irNode):
         return ('Get', irNode.ty, 'offset')
-    if irNode.__class__==pyvex.expr.Binop:
+
+    def Binop(self, irNode):
         opArgs = [termShape(arg) for arg in irNode.args]
         return tuple(['Binop', irNode.op]+opArgs)
-    if irNode.__class__==pyvex.expr.RdTmp:
+
+    def RdTmp(self, irNode):
         return ('RdTmp', irNode.tmp)
-    if irNode.__class__==pyvex.expr.Const:
+
+    def Const(self, irNode):
         return ('Const', termShape(irNode.con))
-    if irNode.__class__==pyvex.const.U32:
+    
+    def U32(self, irNode):
         return ('U32')
-    else:
-        import pudb ; pu.db
-        irNode.pp()
-        raise Exception('should be implemented')
-        #return irNode.__class__.__name__
 
 
 def vexSignature(code, arch):
