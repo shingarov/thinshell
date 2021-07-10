@@ -14,7 +14,7 @@ DEBUG5 ?=--debug-flags=Fetch,Exec,Fault
 #DEBUG5=--debug-flags=GDBMisc,GDBSend,GDBRecv
 
 g5:
-	$(G5DIR)/build/POWER/gem5.debug $(DEBUG5) $(G5SEPY) -c squeak.elf --wait-gdb=1 --param 'system.shared_backstore = "/gem5"'
+	$(G5DIR)/build/POWER/gem5.debug $(DEBUG5) $(G5SEPY) -c squeak.elf --wait-gdb --param 'system.shared_backstore = "/gem5"'
 
 d5:
 	echo run $(DEBUG5) $(G5SEPY) -c squeak.elf --wait-gdb=1 | xclip -i
