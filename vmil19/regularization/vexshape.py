@@ -28,6 +28,36 @@ from bitstring import Bits
 
 from senslist import SensitivityList
 
+def termConstants(irNode):
+    name = irNode.__class__.__name__
+    return getattr(ConstExtractor(), name) (irNode)
+
+class ConstExtractor:
+    def IMark(self, irNode):
+        return None
+
+    def WrTmp(self, irNode):
+        return (termConstants(irNode.data))
+
+    def Put(self, irNode):
+        return irNode.offset
+
+    def Get(self, irNode):
+        return irNode.offset
+
+    def Binop(self, irNode):
+        return [termConstants(arg) for arg in irNode.args]
+
+    def RdTmp(self, irNode):
+        return None
+
+    def Const(self, irNode):
+        return termConstants(irNode.con)
+    
+    def U32(self, irNode):
+        return irNode.value
+
+
 def termShape(irNode):
     name = irNode.__class__.__name__
     return getattr(ShapeDeterminant(), name) (irNode)
@@ -62,7 +92,8 @@ class ShapeDeterminant:
 def vexSignature(code, arch):
     irsb = pyvex.block.IRSB(code, 0x1000, arch, opt_level=-1)
     sig = [ termShape(t) for t in irsb.statements ]
-    return irsb.tyenv.types, sig
+    ops = [ termConstants(t) for t in irsb.statements ]
+    return irsb.tyenv.types, sig, ops
 
 def findArchInfo(archName):
     if archName=='powerpc':
@@ -90,10 +121,12 @@ class ShapeAnalysis:
         self.shapes = {}
         self.shapeIndices = {} #reverse of shapes
         self.computeVarBitPositions(spec)
-        self.P = [None] * (2**self.entropy)
+        self.P   = [None] * (2**self.entropy)
+        self.OPS = [None] * (2**self.entropy)
         it = encodingspec_to_iter(spec)
         for encoding in it:
-            thisSig = str(vexSignature(encoding.bytes, arch))
+            ty,sig,ops = vexSignature(encoding.bytes, arch)
+            thisSig = str((ty,sig))
             if thisSig not in self.specimens:
                 self.specimens[thisSig] = encoding
                 self.shapes[k] = thisSig
@@ -101,6 +134,7 @@ class ShapeAnalysis:
                 k = k+1
             encodingInt = int(self.variableSlice(encoding), 2)
             self.P[encodingInt] = self.shapeIndices[thisSig]
+            self.OPS[encodingInt] = ops
 
     def variableSlice(self, full):
         l = [('1' if full[31-i] else '0') for i in self.varBitPositions]
