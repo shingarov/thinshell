@@ -54,6 +54,9 @@ class SensitivityList:
     def significantSlice(self, bits):
         return Bits(self.filterRelevantMembers(bits))
 
+    def isInsensitive(self):
+        return not list(filter(lambda x: x=='!', self.slist))
+
 def slLetter_to_FieldSpecElement(slLetter):
     if slLetter=='x':
         return '1'
