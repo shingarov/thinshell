@@ -9,7 +9,7 @@ class OperandProjection:
 
     def __getitem__(self, k):
         ops = self.OPS[k]
-        return ops[opIndex]
+        return ops[self.opIndex]
 
 
 # lis
@@ -20,20 +20,23 @@ spec = ['001111', '00011', 5, '000000000000000',1]
 import pudb ; pu.db
 
 anal = ShapeAnalysis(spec, 'powerpc')
-section = anal.getSection()
-sens = anal.sensitivity
+anal.phase0_VEX()
+print("Found %s shapes" % len(anal.shapes))
+print(anal.sensitivity)
+print("Representative instances:")
+for specimen in anal.section:
+    print(specimen)
+print("=========================")
 
-fs = sens.asFieldSpec()
-it = bit_iter.encodingspec_to_iter(fs)
-shapes = {}
-for varPossibility in it:
-    sigBits = sens.significantSlice(varPossibility)
-    print("%s -> %d" % (sigBits.bin, anal.P[varPossibility.uint]))
-    shapes[sigBits] = anal.P[varPossibility.uint]
-
+anal.phase1_shapes()
 print(anal.relevantBitPositionsString())
+for bits_shape in anal.shapeTags.items():
+    print(bits_shape)
+print("or in the opposite direction:")
+print(anal.tagSets)
 
 import pudb ; pu.db
+anal.phase2_partitioning()
 
 shapeN = 0
 opN = 999999

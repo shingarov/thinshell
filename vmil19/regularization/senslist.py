@@ -54,8 +54,12 @@ class SensitivityList:
     def significantSlice(self, bits):
         return Bits(self.filterRelevantMembers(bits))
 
+    @property
+    def entropy(self):
+        return len(list(filter(lambda x: x=='!', self.slist)))
+
     def isInsensitive(self):
-        return not list(filter(lambda x: x=='!', self.slist))
+        return self.entropy==0
 
 def slLetter_to_FieldSpecElement(slLetter):
     if slLetter=='x':
