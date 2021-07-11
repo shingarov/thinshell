@@ -46,7 +46,8 @@ class ConstExtractor:
         return irNode.offset
 
     def Binop(self, irNode):
-        return [termConstants(arg) for arg in irNode.args]
+        evenNones = [termConstants(arg) for arg in irNode.args]
+        return [x for x in evenNones if x!=None]
 
     def RdTmp(self, irNode):
         return None
@@ -88,12 +89,20 @@ class ShapeDeterminant:
     def U32(self, irNode):
         return ('U32')
 
+def flatten(l):
+    out = []
+    for item in l:
+        if isinstance(item, (list, tuple)):
+            out.extend(flatten(item))
+        else:
+            out.append(item)
+    return out
 
 def vexSignature(code, arch):
     irsb = pyvex.block.IRSB(code, 0x1000, arch, opt_level=-1)
     sig = [ termShape(t) for t in irsb.statements ]
     ops = [ termConstants(t) for t in irsb.statements ]
-    return irsb.tyenv.types, sig, ops
+    return irsb.tyenv.types, sig, flatten(ops)
 
 def findArchInfo(archName):
     if archName=='powerpc':
