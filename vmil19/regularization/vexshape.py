@@ -123,18 +123,22 @@ def varBitPositionsFrom(spec, soFar, msb):
 
 class ShapeAnalysis:
     def __init__(self, spec, archName):
+        self.spec = spec
+        self.arch = findArchInfo(archName)
+        self.computeVarBitPositions()
+
+    def phase0_VEX(self):
+        '''Lift VEX IR for every instance and collect the results.'''
         self._sensitivity = None
-        arch = findArchInfo(archName)
         self.specimens = {}
-        k = 0
         self.shapes = {}
         self.shapeIndices = {} #reverse of shapes
-        self.computeVarBitPositions(spec)
         self.P   = [None] * (2**self.entropy)
         self.OPS = [None] * (2**self.entropy)
-        it = encodingspec_to_iter(spec)
+        it = encodingspec_to_iter(self.spec)
+        k = 0
         for encoding in it:
-            ty,sig,ops = vexSignature(encoding.bytes, arch)
+            ty,sig,ops = vexSignature(encoding.bytes, self.arch)
             if ops[0]:
                 raise Error("not IMark???")
             ops = ops[1:]
@@ -148,17 +152,69 @@ class ShapeAnalysis:
             self.P[encodingInt] = self.shapeIndices[thisSig]
             self.OPS[encodingInt] = ops
 
+    def phase1_shapes(self):
+        '''Group shapes'''
+        self.shapeTags = {}
+        self.tagSets = {k:set() for k in range(len(self.shapes))}
+        fs = self.sensitivity.asFieldSpec()
+        it = encodingspec_to_iter(fs)
+        for varPossibility in it:
+            sigBits = self.sensitivity.significantSlice(varPossibility)
+            shapeNum = self.P[varPossibility.uint]
+            self.shapeTags[sigBits] = shapeNum
+            self.tagSets[shapeNum].add(sigBits)
+
+    def phase2_partitioning(self):
+        '''See if the partitioning of instances into shapes
+        exhibits a simple structure.'''
+        if self.isRegular():
+            return "too easy: already regular"
+        # We say an instruction is _easily normalizable_ if it
+        # decomposes into exactly two shapes: the _narrow_ shape
+        # with only one encoding of the discriminating bits,
+        # and the _wide_ shape (everything else).
+        # For example, addi has narrow RA=0 and wide RA!=0.
+        # Obviously, when there is only one shape-discriminating
+        # bit (e.g. H bit on ARM instruction b), both shapes can
+        # be considered narrow.  In this case we arbitrarily choose
+        # to call H=0 narrow and H=1 wide.
+        if len(self.shapes) > 2:
+            raise Error("Not easily normalizable")
+        if len(self.tagSets) != 2:
+            raise Error("what?!!!")
+        if len(self.shapeTags) == 2:
+            # special case of one discriminating bit
+            should-be-implemented
+        else:
+            # either shape0 is narrow, or shape1 is
+            ts0 = self.tagSets[0]
+            ts1 = self.tagSets[1]
+            if len(ts0)==1:
+                self.narrowShape = 0
+                if len(ts1) != (2**self.sensitivity.entropy-1):
+                    raise Error("what?!!!")
+            else:
+                self.narrowShape = 1
+                if len(ts0) != (2**self.sensitivity.entropy-1):
+                    raise Error("what?!!!")
+
+
+
     def variableSlice(self, full):
         l = [('1' if full[31-i] else '0') for i in self.varBitPositions]
         return ''.join(l)
 
-    def computeVarBitPositions(self, spec):
-        self.varBitPositions = varBitPositionsFrom(spec, [], 31)
+    def isRegular(self):
+        return len(self.shapes)==1
+
+    def computeVarBitPositions(self):
+        self.varBitPositions = varBitPositionsFrom(self.spec, [], 31)
         self.varBitPositions.sort()
         self.varBitPositions.reverse()
         self.entropy = len(self.varBitPositions)
 
-    def getSection(self):
+    @property
+    def section(self):
         return list(self.specimens.values())
 
     def computeSensitivity(self):
