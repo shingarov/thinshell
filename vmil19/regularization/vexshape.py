@@ -50,6 +50,10 @@ class ConstExtractor:
         evenNones = [termConstants(arg) for arg in irNode.args]
         return [x for x in evenNones if x!=None]
 
+    def Unop(self, irNode):
+        evenNones = [termConstants(arg) for arg in irNode.args]
+        return [x for x in evenNones if x!=None]
+
     def RdTmp(self, irNode):
         return None
 
@@ -58,6 +62,9 @@ class ConstExtractor:
     
     def U32(self, irNode):
         return irNode.value
+    
+    def Exit(self, irNode):
+        return None # BOGUS -- please implement
 
 
 def termShape(irNode):
@@ -81,6 +88,10 @@ class ShapeDeterminant:
         opArgs = [termShape(arg) for arg in irNode.args]
         return tuple(['Binop', irNode.op]+opArgs)
 
+    def Unop(self, irNode):
+        opArgs = [termShape(arg) for arg in irNode.args]
+        return tuple(['Unop', irNode.op]+opArgs)
+
     def RdTmp(self, irNode):
         return ('RdTmp', irNode.tmp)
 
@@ -89,6 +100,11 @@ class ShapeDeterminant:
     
     def U32(self, irNode):
         return ('U32', CenteredDot)
+
+    def Exit(self, irNode):
+        guard = termShape(irNode.guard)
+        dst = termShape(irNode.dst)
+        return ('Exit', guard, dst, irNode.jk, CenteredDot)
 
 def flatten(l):
     out = []
@@ -110,6 +126,8 @@ def findArchInfo(archName):
         return archinfo.ArchPPC32(archinfo.Endness.BE)
     if archName=='armv5':
         return archinfo.ArchARM()
+    if archName=='mips':
+        return archinfo.ArchMIPS32()
     raise NotFoundError(archName)
 
 def varBitPositionsFrom(spec, soFar, msb):
