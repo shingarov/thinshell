@@ -1,0 +1,2 @@
+
+CenteredDot = "\xB7"
