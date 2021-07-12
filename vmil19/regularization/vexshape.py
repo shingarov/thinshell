@@ -27,6 +27,7 @@ from bit_iter import encodingspec_to_iter
 from bitstring import Bits
 
 from senslist import SensitivityList
+from special_chars import *
 
 def termConstants(irNode):
     name = irNode.__class__.__name__
@@ -71,10 +72,10 @@ class ShapeDeterminant:
         return ('WrTmp', irNode.tmp, termShape(irNode.data))
 
     def Put(self, irNode):
-        return ('Put', 'offset', termShape(irNode.data))
+        return ('Put', CenteredDot, termShape(irNode.data))
 
     def Get(self, irNode):
-        return ('Get', irNode.ty, 'offset')
+        return ('Get', irNode.ty, CenteredDot)
 
     def Binop(self, irNode):
         opArgs = [termShape(arg) for arg in irNode.args]
@@ -87,7 +88,7 @@ class ShapeDeterminant:
         return ('Const', termShape(irNode.con))
     
     def U32(self, irNode):
-        return ('U32')
+        return ('U32', CenteredDot)
 
 def flatten(l):
     out = []
