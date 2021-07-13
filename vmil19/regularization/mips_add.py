@@ -5,18 +5,23 @@ from senslist import SensitivityList
 import bit_iter
 
 class OperandProjection:
-    def __init__(self, OPS, opIndex):
+    def __init__(self, OPS, SHAPES, correctShape, opIndex):
         self.OPS = OPS
+        self.SHAPES = SHAPES
+        self.correctShape = correctShape
         self.opIndex = opIndex
 
     def __getitem__(self, k):
+        if self.SHAPES[k] != self.correctShape:
+            return None
         ops = self.OPS[k]
         return ops[self.opIndex]
 
 
 # MIPS add
 #                 RS  RT  RD
-spec = ['000000',  5,  5,  5,   '00000100000']
+spec = ['000000',  '10101',  '1111',1,   '000',2,   '00000100000']
+#spec = ['000000',  5,  5,  5,   '00000100000']
 import pudb ; pu.db
 
 anal = ShapeAnalysis(spec, 'mips')
@@ -35,7 +40,6 @@ for bits_shape in anal.shapeTags.items():
 print("or in the opposite direction:")
 print(anal.tagSets)
 
-import pudb ; pu.db
 anal.phase2_partitioning()
 if anal.isRegular():
     print("Instruction is REGULAR")
@@ -65,20 +69,24 @@ aaa.reverse()
 b = Bits([aaa[k] for k in anal.varBitPositions])
 exampleOps = anal.OPS[b.uint]
 #opNum proshpandulivae range(exampleOps.len())
-opNum = 2
-shapeN = anal.wide
+opRT = 1
+opRD = 10
+opNum = opRD
 
 def inferFormulaFor(opNum, shapeN):
-    proj = OperandProjection(anal.OPS, opNum)
+    proj = OperandProjection(anal.OPS, anal.P, shapeN, opNum)
+    import pudb ; pu.db
     sl = SensitivityList(anal.entropy)
     opSensitivity = sl.guess(proj)
     if opSensitivity.isInsensitive():
-        theConst = proj[0]
-        print(hex(theConst))
+        return proj[opNum]
     else:
+        twoPoints = opSensitivity.twoPoints()
         # we found at least one sensitive bit, so at least 2 points.
-        # at this point, we can't handle anything nonlinear.
+        # this state of technology can't handle anything nonlinear,
+        # so try linear interpolation
         fff = opSensitivity.asFieldSpec()
+        # WRONG!!! needs to account for constructiveMask!
         itf = bit_iter.encodingspec_to_iter(fff)
         onePoint = next(itf)
         anotherPoint=next(itf)
@@ -97,7 +105,7 @@ def inferFormulaFor(opNum, shapeN):
 
 
 
-f = inferFormulaFor(opNum, shapeN)
+f = inferFormulaFor(opNum, anal.wide)
 
 
 

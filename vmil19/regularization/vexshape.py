@@ -187,6 +187,7 @@ class ShapeAnalysis:
         '''See if the partitioning of instances into shapes
         exhibits a simple structure.'''
         if self.isRegular():
+            self.narrow = 0
             return "too easy: already regular"
         # We say an instruction is _easily normalizable_ if it
         # decomposes into exactly two shapes: the _narrow_ shape
@@ -209,11 +210,13 @@ class ShapeAnalysis:
             ts0 = self.tagSets[0]
             ts1 = self.tagSets[1]
             if len(ts0)==1:
-                self.narrowShape = 0
+                self.narrow = 0
+                self.wide = 1
                 if len(ts1) != (2**self.sensitivity.entropy-1):
                     raise Error("what?!!!")
             else:
-                self.narrowShape = 1
+                self.narrow = 1
+                self.wide = 0
                 if len(ts0) != (2**self.sensitivity.entropy-1):
                     raise Error("what?!!!")
 
