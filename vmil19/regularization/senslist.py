@@ -4,10 +4,6 @@ from z3 import *
 
 import bit_iter
 
-def eitherThisOr0(x):
-    yield x
-    yield 0
-
 def bool2bv(b):
     return If(b, BitVecVal(1,1), BitVecVal(0,1))
 
@@ -34,41 +30,23 @@ class SensitivityList:
         # '!': significant
         # '?': unknown
         self.slist = ['?']*width
-        self.constructiveMask = 0
 
     def __repr__(self):
         return '\xAB'+''.join(list(reversed(self.slist)))+'\xBB'
 
-    def positionsToWiggleNotIncluding(self, excludedPos):
-        a = range(0, len(self.slist))
-        f = filter((lambda pos: (self.slist[pos] != 'x')&(pos!=excludedPos)), a)
-        return list(f)
-
-    def decideIfDepends(self, encodingTrueBits, bitPosition, p):
-        encoding = sum(encodingTrueBits) | self.constructiveMask
-        twinkle = 1<<bitPosition
-        x = p[encoding]
-        if x==None:
-            self.nextConstructiveMask = self.constructiveMask | (1<<bitPosition)
-            return False
-        y = p[encoding|twinkle]
-        if y==None:
-            # leave the constructiveMask bit at 0
-            return False
-        return x != y
-
-
     def probeIrrelevant(self, bitPosition):
-        self.nextConstructiveMask = self.constructiveMask
-        positionsToWiggle = self.positionsToWiggleNotIncluding(bitPosition)
-        iters = map(lambda pos: eitherThisOr0(2**pos), positionsToWiggle)
-        productIter = product(*list(iters))
-        for e in productIter:
-            if self.decideIfDepends(e, bitPosition, p):
-                self.constructiveMask = self.nextConstructiveMask
-                return False
-        self.constructiveMask = self.nextConstructiveMask
-        return True
+        width = len(self.slist)
+        v1 = BitVec('v1', width)
+        v2 = BitVec('v2', width)
+        j1 = bitsExcept(v1, bitPosition)
+        j2 = bitsExcept(v2, bitPosition)
+        thm = Implies(self.P[v1] != self.P[v2],
+                      j1 != j2)
+        self.solver.push()
+        self.solver.add(Not(thm))
+        irrel = self.solver.check() == unsat
+        self.solver.pop()
+        return irrel
 
     def guess(self, p):
         width = len(self.slist)
@@ -78,32 +56,15 @@ class SensitivityList:
             x = BitVecVal(i, width)
             y = p[i]
             self.solver.add(self.P[x] == IntVal(y))
-        return self.guess1()
+        self.guess1()
+        self.solver = None
+        return self
 
     def guess1(self):
-        import pudb; pu.db
-        bools = Bools([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
-        bv = bools2bv(bools)
-        # PROBLEM PROBLEM PROBLEM
-        # other shapes (1) don't work because there is no
-        # one fixed variable assignment, so Z3 returns empty list
-        shape = 0
-        xxxx = self.P[bv] == IntVal(shape)
-
-        conseq = self.solver.consequences([xxxx], bools)
-        sat = conseq[0]
-        fixedVars = conseq[1]
-        k = 0
-        v = [simplify(fixedVar.arg(1)) for fixedVar in fixedVars]
-
-        # we work until here.
-
-
         try:
             i = self.slist.index('?')
         except ValueError:
             return self
-        self.solver.push()
         x = self.probeIrrelevant(i)
         self.slist[i] = 'x' if x else '!'
         return self.guess1()
@@ -113,7 +74,7 @@ class SensitivityList:
         if letter=='!':
             return 1 # a variable bit
         if letter=='x':
-            return '1' if self.constructiveMask&(1<<index) else '0'
+            return '0'
         error("cant have unknown sensitivity this late")
 
     def f(self):
@@ -152,7 +113,3 @@ class SensitivityList:
         oneX = self.significantSlice(onePoint).uint
         anotherX = self.significantSlice(anotherPoint).uint
         oneY = proj[onePoint.uint]                                                                                                                            
-
-
-#sl = SensitivityList(3)
-#g = sl.guess([1, 2, 1, 2, 1, 2, 1, 2])
