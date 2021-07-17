@@ -4,6 +4,8 @@ from vexshape import ShapeAnalysis
 from senslist import SensitivityList
 import bit_iter
 
+from z3 import *
+
 class OperandProjection:
     def __init__(self, OPS, SHAPES, correctShape, opIndex):
         self.OPS = OPS
@@ -13,14 +15,14 @@ class OperandProjection:
 
     def __getitem__(self, k):
         if self.SHAPES[k] != self.correctShape:
-            return None
+            return -1 #need something to construct a Z3 int
         ops = self.OPS[k]
         return ops[self.opIndex]
 
 
 # MIPS add
 #                 RS  RT  RD
-spec = ['000000',  '10101',  '1111',1,   '000',2,   '00000100000']
+spec = ['000000',  '10101',  '1',4,   5,   '00000100000']
 #spec = ['000000',  5,  5,  5,   '00000100000']
 import pudb ; pu.db
 
@@ -75,36 +77,36 @@ opNum = opRD
 
 def inferFormulaFor(opNum, shapeN):
     proj = OperandProjection(anal.OPS, anal.P, shapeN, opNum)
-    import pudb ; pu.db
     sl = SensitivityList(anal.entropy)
-    opSensitivity = sl.guess(proj)
+    opSensitivity = sl.guess(proj, anal.P, shapeN)
     if opSensitivity.isInsensitive():
         return proj[opNum]
     else:
-        twoPoints = opSensitivity.twoPoints()
-        # we found at least one sensitive bit, so at least 2 points.
-        # this state of technology can't handle anything nonlinear,
-        # so try linear interpolation
-        fff = opSensitivity.asFieldSpec()
-        # WRONG!!! needs to account for constructiveMask!
-        itf = bit_iter.encodingspec_to_iter(fff)
-        onePoint = next(itf)
-        anotherPoint=next(itf)
-        oneX = opSensitivity.significantSlice(onePoint).uint
-        anotherX = opSensitivity.significantSlice(anotherPoint).uint
-        oneY = proj[onePoint.uint]
-        anotherY = proj[anotherPoint.uint]
-        if (anotherY-oneY)%(anotherX-oneX) != 0:
-            nonlinear
-        A = (anotherY-oneY)//(anotherX-oneX)
-        if (anotherY+oneY-A*(anotherX+oneX))%2 != 0:
-            nonlinear
-        B = (anotherY+oneY-A*(anotherX+oneX))//2
-        special('constant')
+        width = opSensitivity.entropy
+        solver = Solver()
+        Q = Array('Y', BitVecSort(width), BoolSort())
+        Y = Array('Y', BitVecSort(width), IntSort())
+        for i in range(2**width):
+              x = BitVecVal(i, width)
+              s = opSensitivity.section(i).uint
+              solver.add(Q[x] == BoolVal(anal.P[s]==shapeN))
+              y = proj[s]
+              solver.add(Y[x] == IntVal(y))
 
+        a = Int('a')
+        b = Int('b')
+        x = BitVec('x', width)
+        thm = ForAll(x,
+                Implies(Q[x],
+                    Y[x] == (BV2Int(x)*a + b)))
+        solver.add(thm)
+        result = solver.check()
+        if result != sat:
+            raise Error()
+        m = solver.model()
+        return m.eval(a).as_long(), m.eval(b).as_long()
 
-
-
+import pudb ; pu.db
 f = inferFormulaFor(opNum, anal.wide)
 
 

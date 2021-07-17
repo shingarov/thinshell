@@ -23,6 +23,21 @@ def bitsExcept(bv, j):
     lo = Extract(j-1, 0, bv)
     return Concat(hi, lo)
 
+def substituteFieldSpec(fs, bits):
+    if not fs:
+        if not bits:
+            return []
+        else:
+            raise Error("too many bits supplied")
+    if fs[0]=='0':
+        return Bits('0b0')+substituteFieldSpec(fs[1:], bits)
+    if fs[0]=='1':
+        return Bits('0b1')+substituteFieldSpec(fs[1:], bits)
+    if fs[0]!=1:
+        raise Error("yeah, we cut some corners, but this shouldnt happen")
+    leftmostBit = Bits(bool=bits[0])
+    return leftmostBit + substituteFieldSpec(fs[1:], bits[1:])
+
 
 class SensitivityList:
     def __init__(self, width):
@@ -30,9 +45,19 @@ class SensitivityList:
         # '!': significant
         # '?': unknown
         self.slist = ['?']*width
+        self.Q = None
 
     def __repr__(self):
         return '\xAB'+''.join(list(reversed(self.slist)))+'\xBB'
+
+    def good(self, point):
+        if None != self.Q:
+            return self.Q[point]==self.correctShape
+        else:
+            return BoolVal(True)
+
+    def differ(self, v1, v2):
+        return And(self.P[v1] != self.P[v2], self.good(v1), self.good(v2))
 
     def probeIrrelevant(self, bitPosition):
         width = len(self.slist)
@@ -40,7 +65,7 @@ class SensitivityList:
         v2 = BitVec('v2', width)
         j1 = bitsExcept(v1, bitPosition)
         j2 = bitsExcept(v2, bitPosition)
-        thm = Implies(self.P[v1] != self.P[v2],
+        thm = Implies(self.differ(v1, v2),
                       j1 != j2)
         self.solver.push()
         self.solver.add(Not(thm))
@@ -48,7 +73,7 @@ class SensitivityList:
         self.solver.pop()
         return irrel
 
-    def guess(self, p):
+    def guess(self, p, q=None, correctShape=None):
         width = len(self.slist)
         self.solver = Solver()
         self.P = Array('P', BitVecSort(width), IntSort())
@@ -56,6 +81,13 @@ class SensitivityList:
             x = BitVecVal(i, width)
             y = p[i]
             self.solver.add(self.P[x] == IntVal(y))
+        if q:
+            self.correctShape = IntVal(correctShape)
+            self.Q = Array('Q', BitVecSort(width), IntSort())
+            for i in range(2**width):
+                x = BitVecVal(i, width)
+                y = q[i]
+                self.solver.add(self.Q[x] == IntVal(y))
         self.guess1()
         self.solver = None
         return self
@@ -80,6 +112,12 @@ class SensitivityList:
     def f(self):
         return lambda i_l: self.slLetter_to_FieldSpecElement(i_l)
 
+    def section(self, relevantEncoding):
+        relevantBits = Bits(uint=relevantEncoding, length=self.entropy)
+        fs = self.asFieldSpec()
+        x = substituteFieldSpec(fs, relevantBits)
+        return x
+
     def asFieldSpec(self):
         l = list(map(self.f(), enumerate(self.slist)))
         #l = list(map(slLetter_to_FieldSpecElement, self.slist))
@@ -103,6 +141,7 @@ class SensitivityList:
         return self.entropy==0
 
     def twoPoints(self):
+        import pudb ; pu.db
         if self.isInsensitive():
             raise Error()
         fff = self.asFieldSpec()
