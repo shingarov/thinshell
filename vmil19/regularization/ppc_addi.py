@@ -14,9 +14,9 @@ class OperandProjection:
         return ops[self.opIndex]
 
 
-# lis
+# addis/lis
 #          op       RT    RA       d
-spec = ['001111', '00011', 5, '00000000000000',2]
+spec = ['001111', '00011', 5,   '00000000',8]
 #spec = ['001111',   5, '11100',   '00000000',8]
 #spec = ['001111',  5, '00011', '1111000011110000']
 import pudb ; pu.db
