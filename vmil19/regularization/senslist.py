@@ -15,6 +15,17 @@ def bools2bv(bs):
     bits = [bool2bv(b) for b in bs]
     return Concat(*bits)
 
+def bitsExcept(bv, j):
+    # bv with j-th bit removed
+    # j=0 is LSB
+    # result.size() = bv.size()-1
+    if j==0:
+        return Extract(bv.size()-1, 1, bv)
+    if j==bv.size()-1:
+        return Extract(bv.size()-2, 0, bv)
+    hi = Extract(bv.size()-1, j+1, bv)
+    lo = Extract(j-1, 0, bv)
+    return Concat(hi, lo)
 
 
 class SensitivityList:
