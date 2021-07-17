@@ -1,11 +1,21 @@
 from bitstring import Bits
 from itertools import product
+from z3 import *
 
 import bit_iter
 
 def eitherThisOr0(x):
     yield x
     yield 0
+
+def bool2bv(b):
+    return If(b, BitVecVal(1,1), BitVecVal(0,1))
+
+def bools2bv(bs):
+    bits = [bool2bv(b) for b in bs]
+    return Concat(*bits)
+
+
 
 class SensitivityList:
     def __init__(self, width):
@@ -37,7 +47,7 @@ class SensitivityList:
         return x != y
 
 
-    def probeIrrelevant(self, bitPosition, p):
+    def probeIrrelevant(self, bitPosition):
         self.nextConstructiveMask = self.constructiveMask
         positionsToWiggle = self.positionsToWiggleNotIncluding(bitPosition)
         iters = map(lambda pos: eitherThisOr0(2**pos), positionsToWiggle)
@@ -50,13 +60,42 @@ class SensitivityList:
         return True
 
     def guess(self, p):
+        width = len(self.slist)
+        self.solver = Solver()
+        self.P = Array('P', BitVecSort(width), IntSort())
+        for i in range(2**width):
+            x = BitVecVal(i, width)
+            y = p[i]
+            self.solver.add(self.P[x] == IntVal(y))
+        return self.guess1()
+
+    def guess1(self):
+        import pudb; pu.db
+        bools = Bools([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+        bv = bools2bv(bools)
+        # PROBLEM PROBLEM PROBLEM
+        # other shapes (1) don't work because there is no
+        # one fixed variable assignment, so Z3 returns empty list
+        shape = 0
+        xxxx = self.P[bv] == IntVal(shape)
+
+        conseq = self.solver.consequences([xxxx], bools)
+        sat = conseq[0]
+        fixedVars = conseq[1]
+        k = 0
+        v = [simplify(fixedVar.arg(1)) for fixedVar in fixedVars]
+
+        # we work until here.
+
+
         try:
             i = self.slist.index('?')
         except ValueError:
             return self
-        x = self.probeIrrelevant(i, p)
+        self.solver.push()
+        x = self.probeIrrelevant(i)
         self.slist[i] = 'x' if x else '!'
-        return self.guess(p)
+        return self.guess1()
 
     def slLetter_to_FieldSpecElement(self, i_l):
         index, letter = i_l
