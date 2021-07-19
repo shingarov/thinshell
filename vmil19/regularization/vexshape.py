@@ -23,11 +23,26 @@
 
 import pyvex
 import archinfo
+from z3 import *
 from bit_iter import encodingspec_to_iter
 from bitstring import Bits
 
 from senslist import SensitivityList
 from special_chars import *
+
+
+class OperandProjection:
+    def __init__(self, OPS, SHAPES, correctShape, opIndex):
+        self.OPS = OPS
+        self.SHAPES = SHAPES
+        self.correctShape = correctShape
+        self.opIndex = opIndex
+
+    def __getitem__(self, k):
+        if self.SHAPES[k] != self.correctShape:
+            return -1 #need something to construct a Z3 int
+        ops = self.OPS[k]
+        return ops[self.opIndex]
 
 def termConstants(irNode):
     name = irNode.__class__.__name__
@@ -220,6 +235,35 @@ class ShapeAnalysis:
                 if len(ts0) != (2**self.sensitivity.entropy-1):
                     raise Error("what?!!!")
 
+
+    def inferFormulaFor(self, opNum, shapeN):
+        proj = OperandProjection(self.OPS, self.P, shapeN, opNum)
+        sl = SensitivityList(self.entropy)
+        opSensitivity = sl.guess(proj, self.P, shapeN)
+        if opSensitivity.isInsensitive(): # just a silly shortcut
+            return repr(opSensitivity), 0, proj[opNum]
+        width = opSensitivity.entropy
+        solver = Solver()
+        Q = Array('Y', BitVecSort(width), BoolSort())
+        Y = Array('Y', BitVecSort(width), IntSort())
+        for i in range(2**width):
+            x = BitVecVal(i, width)
+            s = opSensitivity.section(i).uint
+            solver.add(Q[x] == BoolVal(self.P[s]==shapeN))
+            y = proj[s]
+            solver.add(Y[x] == IntVal(y))
+        a = Int('a')
+        b = Int('b')
+        x = BitVec('x', width)
+        thm = ForAll(x,
+            Implies(Q[x],
+            Y[x] == (BV2Int(x)*a + b)))
+        solver.add(thm)
+        result = solver.check()
+        if result != sat:
+            raise Error()
+        m = solver.model()
+        return repr(opSensitivity), m.eval(a).as_long(), m.eval(b).as_long()
 
 
     def variableSlice(self, full):
