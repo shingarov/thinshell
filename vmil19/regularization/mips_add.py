@@ -7,7 +7,7 @@ import bit_iter
 
 # MIPS add
 #                      RS      RT      RD
-spec = ['000000',  '10101',  '1',4,   5,   '00000100000']
+spec = ['000000',  '1010',1,  5,   5,   '00000100000']
 #spec = ['000000',  5,  5,  5,   '00000100000']
 import pudb ; pu.db
 
@@ -27,30 +27,19 @@ for bits_shape in anal.shapeTags.items():
 print("or in the opposite direction:")
 print(anal.tagSets)
 
-anal.phase2_partitioning()
-if anal.isRegular():
-    print("Instruction is REGULAR")
-else:
-    print("Instruction is easily normalizable;")
-    print("Narrow shape is %d" % anal.narrow)
+#anal.phase2_partitioning()
+#if anal.isRegular():
+#    print("Instruction is REGULAR")
+#else:
+#    print("Instruction is easily normalizable;")
+#    print("Narrow shape is %d" % anal.narrow)
 
-
-# infer operand formulae for the narrow shape
-print("=== shape %d: ============" % anal.narrow)
-print(anal.shapes[anal.narrow]) # cant do better because it's a string
-print("=== operands: ===========")
-print(".......")
 
 
 import pudb ; pu.db
 
-# infer operand formulae for the wide shape
-thisShapeN = anal.wide
-print("=== shape %d: ============" % thisShapeN)
-print(anal.shapes[thisShapeN]) # cant to better because it's a string
-print("=== operands: ===========")
-
-exampleOps = anal.specimenOpsOfShape(thisShapeN)
-ops = [anal.formulaFor(opNum, thisShapeN) for opNum in range(len(exampleOps))]
+shapeN = 3
+exampleOps = anal.specimenOpsOfShape(shapeN)
+ops = [anal.formulaFor(opNum, shapeN) for opNum in range(len(exampleOps))]
     
 print(ops)
