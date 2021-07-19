@@ -217,9 +217,6 @@ class ShapeAnalysis:
             raise Error("Not easily normalizable")
         if len(self.tagSets) != 2:
             raise Error("what?!!!")
-        if len(self.shapeTags) == 2:
-            # special case of one discriminating bit
-            should-be-implemented
         else:
             # either shape0 is narrow, or shape1 is
             ts0 = self.tagSets[0]
@@ -249,7 +246,8 @@ class ShapeAnalysis:
         sl = SensitivityList(self.entropy)
         opSensitivity = sl.guess(proj, self.P, shapeN)
         if opSensitivity.isInsensitive(): # just a silly shortcut
-            return repr(opSensitivity), 0, proj[opNum]
+            op = proj[self.specimenEncodingOfShape(shapeN).uint]
+            return repr(opSensitivity), 0, op
         width = opSensitivity.entropy
         solver = Solver()
         Q = Array('Y', BitVecSort(width), BoolSort())
