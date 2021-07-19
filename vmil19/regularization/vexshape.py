@@ -173,9 +173,6 @@ class ShapeAnalysis:
         k = 0
         for encoding in it:
             ty,sig,ops = vexSignature(encoding.bytes, self.arch)
-            if ops[0]:
-                raise Error("not IMark???")
-            ops = ops[1:]
             thisSig = str((ty,sig))
             if thisSig not in self.specimens:
                 self.specimens[thisSig] = encoding
