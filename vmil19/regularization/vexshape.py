@@ -50,7 +50,7 @@ def termConstants(irNode):
 
 class ConstExtractor:
     def IMark(self, irNode):
-        return None
+        return [irNode.addr, irNode.len, irNode.delta]
 
     def WrTmp(self, irNode):
         return (termConstants(irNode.data))
@@ -88,7 +88,7 @@ def termShape(irNode):
 
 class ShapeDeterminant:
     def IMark(self, irNode):
-        return ('IMark')
+        return ('IMark', CenteredDot, CenteredDot, CenteredDot)
 
     def WrTmp(self, irNode):
         return ('WrTmp', irNode.tmp, termShape(irNode.data))
