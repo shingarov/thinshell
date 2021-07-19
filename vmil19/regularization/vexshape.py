@@ -235,6 +235,14 @@ class ShapeAnalysis:
                 if len(ts0) != (2**self.sensitivity.entropy-1):
                     raise Error("what?!!!")
 
+    def specimenEncodingOfShape(self, shapeN):
+        thisShapeSpecimen = self.section[shapeN]
+        aaa = list(thisShapeSpecimen).copy()
+        aaa.reverse()
+        return Bits([aaa[k] for k in self.varBitPositions])
+
+    def specimenOpsOfShape(self, shapeN):
+        return self.OPS[self.specimenEncodingOfShape(shapeN).uint]
 
     def inferFormulaFor(self, opNum, shapeN):
         proj = OperandProjection(self.OPS, self.P, shapeN, opNum)

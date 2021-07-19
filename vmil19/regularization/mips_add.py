@@ -50,13 +50,7 @@ print("=== shape %d: ============" % thisShapeN)
 print(anal.shapes[thisShapeN]) # cant to better because it's a string
 print("=== operands: ===========")
 
-# a representative instance to fetch from OPS
-# this is only needed so that we know how many operands to iterate over
-thisShapeSpecimen = anal.section[thisShapeN]
-aaa = list(thisShapeSpecimen).copy()
-aaa.reverse()
-b = Bits([aaa[k] for k in anal.varBitPositions])
-exampleOps = anal.OPS[b.uint]
+exampleOps = anal.specimenOpsOfShape(thisShapeN)
 #opNum proshpandulivae range(exampleOps.len())
 opRT = 1
 opRD = 10
