@@ -238,7 +238,7 @@ class ShapeAnalysis:
     def specimenOpsOfShape(self, shapeN):
         return self.OPS[self.specimenEncodingOfShape(shapeN).uint]
 
-    def inferFormulaFor(self, opNum, shapeN):
+    def formulaFor(self, opNum, shapeN):
         proj = OperandProjection(self.OPS, self.P, shapeN, opNum)
         sl = SensitivityList(self.entropy)
         opSensitivity = sl.guess(proj, self.P, shapeN)
@@ -247,20 +247,23 @@ class ShapeAnalysis:
             return repr(opSensitivity), 0, op
         width = opSensitivity.entropy
         solver = Solver()
-        Q = Array('Y', BitVecSort(width), BoolSort())
+        Q = Array('Q', BitVecSort(width), BoolSort())
         Y = Array('Y', BitVecSort(width), IntSort())
         for i in range(2**width):
             x = BitVecVal(i, width)
-            s = opSensitivity.section(i).uint
-            solver.add(Q[x] == BoolVal(self.P[s]==shapeN))
-            y = proj[s]
-            solver.add(Y[x] == IntVal(y))
+            f = opSensitivity.fiber(i)
+            ff = filter(lambda j: self.P[j]==shapeN, f)
+            try:
+                s = next(ff)
+                y = proj[s]
+                solver.add(Y[x] == IntVal(y))
+            except StopIteration:
+                pass
         a = Int('a')
         b = Int('b')
         x = BitVec('x', width)
         thm = ForAll(x,
-            Implies(Q[x],
-            Y[x] == (BV2Int(x)*a + b)))
+            Y[x] == (BV2Int(x)*a + b))
         solver.add(thm)
         result = solver.check()
         if result != sat:

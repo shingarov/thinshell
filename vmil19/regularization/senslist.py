@@ -112,11 +112,15 @@ class SensitivityList:
     def f(self):
         return lambda i_l: self.slLetter_to_FieldSpecElement(i_l)
 
-    def section(self, relevantEncoding):
-        relevantBits = Bits(uint=relevantEncoding, length=self.entropy)
-        fs = self.asFieldSpec()
-        x = substituteFieldSpec(fs, relevantBits)
-        return x
+    def fiber(self, relevantEncoding):
+        specimen = list(Bits(uint=relevantEncoding, length=self.entropy))
+        for x in range(2**len(self.slist)):
+            if self.matches(x, specimen):
+                yield x
+
+    def matches(self, x, specimen):
+        r=self.filterRelevantMembers(Bits(uint=x, length=len(self.slist)))
+        return r==specimen
 
     def asFieldSpec(self):
         l = list(map(self.f(), enumerate(self.slist)))

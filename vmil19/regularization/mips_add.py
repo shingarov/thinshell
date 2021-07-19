@@ -6,7 +6,7 @@ import bit_iter
 
 
 # MIPS add
-#                 RS  RT  RD
+#                      RS      RT      RD
 spec = ['000000',  '10101',  '1',4,   5,   '00000100000']
 #spec = ['000000',  5,  5,  5,   '00000100000']
 import pudb ; pu.db
@@ -51,14 +51,6 @@ print(anal.shapes[thisShapeN]) # cant to better because it's a string
 print("=== operands: ===========")
 
 exampleOps = anal.specimenOpsOfShape(thisShapeN)
-#opNum proshpandulivae range(exampleOps.len())
-opRT = 1
-opRD = 10
-opNum = opRD
-
-f = anal.inferFormulaFor(opNum, anal.wide)
-
-
-
-
-
+ops = [anal.formulaFor(opNum, thisShapeN) for opNum in range(len(exampleOps))]
+    
+print(ops)
