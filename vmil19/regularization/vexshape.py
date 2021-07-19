@@ -70,7 +70,7 @@ class ConstExtractor:
         return [x for x in evenNones if x!=None]
 
     def RdTmp(self, irNode):
-        return None
+        return []
 
     def Const(self, irNode):
         return termConstants(irNode.con)
@@ -79,7 +79,7 @@ class ConstExtractor:
         return irNode.value
     
     def Exit(self, irNode):
-        return None # BOGUS -- please implement
+        return 7777777 # BOGUS -- please implement
 
 
 def termShape(irNode):
