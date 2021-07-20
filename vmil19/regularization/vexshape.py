@@ -209,7 +209,10 @@ class ShapeAnalysis:
         # Obviously, when there is only one shape-discriminating
         # bit (e.g. H bit on ARM instruction b), both shapes can
         # be considered narrow.  In this case we arbitrarily choose
-        # to call H=0 narrow and H=1 wide.
+        # which side to call narrow/wide.
+        # NB: not every two-shaped instruction (which we call _fork_)
+        # is easily normalizable: the condition could be more complex
+        # than "constant point/everything else)
         if len(self.shapes) > 2:
             raise Error("Not easily normalizable")
         if len(self.tagSets) != 2:
