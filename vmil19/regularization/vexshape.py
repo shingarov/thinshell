@@ -31,6 +31,34 @@ from senslist import SensitivityList
 from special_chars import *
 
 
+class Empty:
+    def size(self):
+        return 0
+
+def mingle(leftBV, rightBV, mask):
+    if leftBV.size()+rightBV.size() != mask.length:
+        raise Exception("wrong count of bits")
+    if mask.length==0:
+        return Empty()
+    if mask[0]:
+        sz = rightBV.size()
+        leftmost = Extract(sz-1,sz-1, rightBV)
+        rest = Extract(sz-2,0, rightBV) if sz>1 else Empty()
+        newMask = mask[1:]
+        tail = mingle(leftBV, rest, newMask)
+        if tail.size()==0:
+            return leftmost
+        return simplify(Concat(leftmost, tail))
+    else:
+        sz = leftBV.size()
+        leftmost = Extract(sz-1,sz-1, leftBV)
+        rest = Extract(sz-2,0, leftBV) if sz>1 else Empty()
+        newMask = mask[1:]
+        tail = mingle(rest, rightBV, newMask)
+        if tail.size()==0:
+            return leftmost
+        return simplify(Concat(leftmost, tail))
+
 class OperandProjection:
     def __init__(self, OPS, SHAPES, correctShape, opIndex):
         self.OPS = OPS
@@ -195,12 +223,56 @@ class ShapeAnalysis:
             self.shapeTags[sigBits] = shapeNum
             self.tagSets[shapeNum].add(sigBits)
 
+    def factorize_flock(self, flocking):
+        lBits = flocking.count(0)
+        rBits = flocking.count(1)
+        sh = Function('sh', BitVecSort(lBits), BitVecSort(rBits),  IntSort())
+        f  = Function('f',  IntSort(),     BoolSort(),     IntSort())
+        t  = Function('t',  BitVecSort(lBits),             IntSort())
+        s  = Function('s',  BitVecSort(rBits),             BoolSort())
+
+        solver = Solver()
+        l = BitVec('l', lBits)
+        r = BitVec('r', rBits)
+        composition = ForAll([l,r], sh(l,r)==f(t(l),s(r)))
+        solver.add(composition)
+
+        for iy in range(2**lBits):
+            for ix in range(2**rBits):
+                x = BitVecVal(ix,rBits)
+                y = BitVecVal(iy,lBits)
+                yx = mingle(y,x, flocking)
+                iyx = simplify(yx).as_long()
+                byx = Bits(uint=iyx, length=lBits+rBits)
+                shape = self.shapeTags[byx]
+                solver.add(sh(y,x)==IntVal(shape))
+
+        result = solver.check()
+        if result != sat:
+            return None
+        m = solver.model()
+        classifier = m[s]
+        if classifier.num_entries() != 1:
+            return None
+        return classifier
+
+    def find_flockings(self):
+        e = self.sensitivity.entropy
+        ran = range(1, 2**e-1)
+        candidates = [Bits(uint=k, length=e) for k in ran]
+        candidates.sort(key=lambda b: b.count(1))
+        for flocking in candidates:
+            f = self.factorize_flock(flocking)
+            if f:
+                yield (flocking, f)
+
     def phase2_partitioning(self):
         '''See if the partitioning of instances into shapes
         exhibits a simple structure.'''
         if self.isRegular():
             self.narrow = 0
             return "too easy: already regular"
+
         # We say an instruction is _easily normalizable_ if it
         # decomposes into exactly two shapes: the _narrow_ shape
         # with only one encoding of the discriminating bits,
@@ -213,24 +285,13 @@ class ShapeAnalysis:
         # NB: not every two-shaped instruction (which we call _fork_)
         # is easily normalizable: the condition could be more complex
         # than "constant point/everything else)
-        if len(self.shapes) > 2:
-            raise Error("Not easily normalizable")
-        if len(self.tagSets) != 2:
-            raise Error("what?!!!")
-        else:
-            # either shape0 is narrow, or shape1 is
-            ts0 = self.tagSets[0]
-            ts1 = self.tagSets[1]
-            if len(ts0)==1:
-                self.narrow = 0
-                self.wide = 1
-                if len(ts1) != (2**self.sensitivity.entropy-1):
-                    raise Error("what?!!!")
-            else:
-                self.narrow = 1
-                self.wide = 0
-                if len(ts0) != (2**self.sensitivity.entropy-1):
-                    raise Error("what?!!!")
+        if self.isFork():
+            return self.analyze_fork()
+        # more than two shapes; can we factorize them in flocks?
+        fl = self.find_flockings()
+        # TODO: recursive flocks
+        return list(fl)
+
 
     def specimenEncodingOfShape(self, shapeN):
         thisShapeSpecimen = self.section[shapeN]
@@ -281,6 +342,14 @@ class ShapeAnalysis:
 
     def isRegular(self):
         return len(self.shapes)==1
+
+    def isFork(self):
+        return len(self.shapes)==2
+
+    def phase2b_analyze_fork(self):
+        if len(self.tagSets) != 2:
+            raise Error("what?!!!")
+        return "TODO: implement analyze_fork"
 
     def computeVarBitPositions(self):
         self.varBitPositions = varBitPositionsFrom(self.spec, [], 31)

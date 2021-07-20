@@ -6,9 +6,9 @@ import bit_iter
 
 
 # MIPS add
-#                      RS      RT      RD
-spec = ['000000',  '1010',1,  5,   5,   '00000100000']
-#spec = ['000000',  5,  5,  5,   '00000100000']
+#                      RS       RT      RD
+#spec = ['000000',  '000',2,  '000',2,  '1',4,   '00000100000']
+spec = ['000000',  5,  5,  5,   '00000100000']
 import pudb ; pu.db
 
 anal = ShapeAnalysis(spec, 'mips')
@@ -27,19 +27,15 @@ for bits_shape in anal.shapeTags.items():
 print("or in the opposite direction:")
 print(anal.tagSets)
 
-#anal.phase2_partitioning()
-#if anal.isRegular():
-#    print("Instruction is REGULAR")
-#else:
-#    print("Instruction is easily normalizable;")
-#    print("Narrow shape is %d" % anal.narrow)
+print("=========================")
+print("Shape partitioning:")
+print(anal.phase2_partitioning())
 
-
-
-import pudb ; pu.db
-
-shapeN = 3
-exampleOps = anal.specimenOpsOfShape(shapeN)
-ops = [anal.formulaFor(opNum, shapeN) for opNum in range(len(exampleOps))]
-    
-print(ops)
+print("===== SHAPES: ===========")
+for shapeN in range(len(anal.shapes)):
+    print("=== Shape %d: ===========" % shapeN)
+    print(anal.shapes[shapeN])
+    print("ops = ")
+    exampleOps = anal.specimenOpsOfShape(shapeN)
+    ops = [anal.formulaFor(opNum, shapeN) for opNum in range(len(exampleOps))]
+    print(ops)
