@@ -1,0 +1,106 @@
+# Following must be defined in including
+# makefile!
+
+ifndef ARCH
+  $(error ARCH is not defined, please define prior inclusion)
+endif
+ifndef GEM5_ARCH
+  $(error GEM5_ARCH is not defined, please define prior inclusion)
+endif
+
+# Following should be set too, but defaulting to
+# $(ARCH) seems to be good too.
+QEMU_ARCH		?= $(ARCH)
+
+
+# From now on, nothing should not need to be modified, defaults
+# should do. Local modifications/overides should go to
+# Makefile.local (most importantly, definition of GEM5_DIR)
+# See ../../Makefile.local rule below.
+
+
+# Name of the produced binary, defaults to directory name
+BINARY ?= $(shell basename $(shell dirname $(shell pwd))).elf
+
+# Cross-compiler toolchain prefix
+CROSS?=$(ARCH)-linux-gnu-
+
+# Tools
+AS=$(CROSS)as
+LD=$(CROSS)ld
+GDB?=gdb
+QEMU ?= qemu-$(QEMU_ARCH)-static
+
+ASFLAGS ?=
+LDFLAGS ?=
+
+# Automagically add -T Link if linker script named `Link`
+# is found
+ifneq (,$(wildcard Link))
+	LDFLAGS+=-T Link
+endif
+
+# Commands
+GDB_CMD=$(GDB) \
+        -ex "target remote :7000" \
+        --args $(shell realpath $(BINARY))
+GEM5_SEPY		?= $(GEM5_DIR)/configs/example/se.py
+GEM5_DEBUG_FLAGS?="--debug-flags=Fetch,Decode"
+GEM5_CMD = $(GEM5_DIR)/build/$(GEM5_ARCH)/gem5.opt \
+		   $(GEM5_DEBUG_FLAGS) \
+		   $(GEM5_SEPY) \
+		   -c $(BINARY) --wait-gdb \
+		   --param 'system.shared_backstore = "/gem5"'
+QEMU_CMD = $(QEMU) -g 7000 $(BINARY)
+
+default: $(BINARY)
+
+../../Makefile.local:
+	@echo "GEM5_DIR ?= \$$(error GEM5_DIR not defined, please define in \$$(shell realpath ../../Makefile.local) )" >> $@
+	@echo "" >> $@
+	@echo "# Other tunables" >> $@
+	@echo "" >> $@
+	@echo "# GEM5_DEBUG_FLAGS ?=\"--debug-flags=Fetch,Decode\"" >> $@
+	@echo "# GEM5_SEPY		    ?= $(GEM5_DIR)/configs/example/se.py" >> $@
+	@echo "# GDB              ?= gdb" >> $@
+	@echo "# QEMU             ?= qemu-$(QEMU_ARCH)-static" >> $@
+
+include ../../Makefile.local
+
+%.elf: %.o
+	$(LD) $(LDFLAGS) -static -o $@ $<
+
+%.o: %.s
+	$(AS) $(ASFLAGS) -g -o $@ $<
+
+.PHONY:: show-g5 run-g5, g5
+
+show-g5: $(BINARY)
+	echo $(GEM5_CMD)
+
+run-g5, g5: $(BINARY)
+	$(GEM5_CMD)
+
+.PHONY:: show-gdb run-gdb, gdb
+
+show-gdb: $(BINARY)
+	echo $(GDB_CMD)
+
+run-gdb, gdb: $(BINARY)
+	$(GDB_CMD)
+
+.PHONY:: show-qemu run-qemu, qemu
+
+show-qemu:
+	echo $(QEMU_CMD)
+
+run-qemu, qemu: $(BINARY)
+	$(QEMU_CMD)
+
+clean:
+	rm -f $(BINARY) *.o
+	rm -rf m5out
+
+
+
+

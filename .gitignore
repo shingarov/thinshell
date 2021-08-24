@@ -4,3 +4,4 @@
 *.pyc
 *.elf
 m5out
+Makefile.local
