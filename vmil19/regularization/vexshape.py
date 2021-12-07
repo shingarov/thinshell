@@ -171,6 +171,8 @@ def findArchInfo(archName):
         return archinfo.ArchARM()
     if archName=='mips':
         return archinfo.ArchMIPS32()
+    if archName=='x86':
+        return archinfo.ArchX86()
     raise NotFoundError(archName)
 
 def varBitPositionsFrom(spec, soFar, msb):
