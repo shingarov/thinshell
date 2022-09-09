@@ -46,7 +46,7 @@ GDB_CMD=$(GDB) \
         --args $(shell realpath $(BINARY))
 GEM5_SEPY		?= $(GEM5_DIR)/configs/example/se.py
 GEM5_DEBUG_FLAGS?="--debug-flags=Fetch,Decode"
-GEM5_CMD = $(GEM5_DIR)/build/$(GEM5_ARCH)/gem5.opt \
+GEM5_CMD = $(GEM5_DIR)/build/$(GEM5_ARCH)/gem5.debug \
 		   $(GEM5_DEBUG_FLAGS) \
 		   $(GEM5_SEPY) \
 		   -c $(BINARY) --wait-gdb \
