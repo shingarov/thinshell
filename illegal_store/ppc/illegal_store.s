@@ -1,4 +1,8 @@
-# Die of SEGV dereferencing 0xFFFFFFFF for writing.
+# This is a guinea-pig program for playing with ULD's treatment
+# of exception signals.
+# Die of SEGV dereferencing 0xFFFFFFFF for writing;
+# ThinshellTest>>testIllegalStore will catch the DebugStopped
+# and verify the signal number.
 
 .machine ppc
 .text
@@ -8,7 +12,6 @@
 
 _start:
     li 9, -1
-    or 1,1,1
     stw 0, 0(9)
     # this would exit to the OS with 42
     # if we didn't die on the previous line
