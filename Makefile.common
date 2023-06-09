@@ -45,7 +45,7 @@ GDB_CMD=$(GDB) \
         -ex "target remote :7000" \
         --args $(shell realpath $(BINARY))
 GEM5_SEPY		?= $(GEM5_DIR)/configs/deprecated/example/se.py
-GEM5_DEBUG_FLAGS?="--debug-flags=Fetch,Decode"
+GEM5_DEBUG_FLAGS?="--debug-flags=Exec"
 GEM5_CMD = $(GEM5_DIR)/build/$(GEM5_ARCH)/gem5.debug \
 		   $(GEM5_DEBUG_FLAGS) \
 		   $(GEM5_SEPY) \
