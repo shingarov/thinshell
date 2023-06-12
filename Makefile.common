@@ -55,7 +55,7 @@ QEMU_CMD = $(QEMU) -g 7000 $(BINARY)
 
 default: $(BINARY)
 
-../../Makefile.local:
+$(dir $(lastword $(MAKEFILE_LIST)))Makefile.local:
 	@echo "GEM5_DIR ?= \$$(error GEM5_DIR not defined, please define in \$$(shell realpath ../../Makefile.local) )" >> $@
 	@echo "" >> $@
 	@echo "# Other tunables" >> $@
@@ -65,7 +65,7 @@ default: $(BINARY)
 	@echo "# GDB              ?= gdb" >> $@
 	@echo "# QEMU             ?= qemu-$(QEMU_ARCH)-static" >> $@
 
-include ../../Makefile.local
+-include $(dir $(lastword $(MAKEFILE_LIST)))Makefile.local
 
 %.elf: %.o
 	$(LD) $(LDFLAGS) -static -o $@ $<
