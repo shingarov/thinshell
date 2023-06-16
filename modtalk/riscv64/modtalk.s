@@ -26,7 +26,24 @@ _start:
     nop
     # jump to the nZone
     jalr s9
-    li x1, 42
+
+    # At this point, a0 contains return value from
+    # the last initializer (should be a program initializer).
+
+    # If the return value is SMI, convert it to native (signed) integer
+    # and store it in t0.
+    # If not, store 254 in t0 (so 254 will be the exit status code when
+    # initializer returns non-SMI object)
+    addi t0, zero, 254
+    andi t1, a0, 1
+    beqz t1, .L_nonSMI
+    srai t0, a0, 4
+.L_nonSMI:
+
+    # Just call exit. The exit status code is in t0 at this point
+    # (see above).
+    mv a0,t0
+    li a7, 93 # SYS_exit
     ecall
 
 
