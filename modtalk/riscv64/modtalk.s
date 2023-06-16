@@ -6,17 +6,17 @@
 _start:
     nop
 
-    # load address of the nZone into x16
-    lui  x16, %hi(nZone)
-    addi x16, x16, %lo(nZone)
+    # load address of the nZone into s9
+    lui  s9, %hi(nZone)
+    addi s9, s9, %lo(nZone)
 
-    # heap goes in x17
-    lui  x17, %hi(heap)
-    addi x17, x17, %lo(heap)
+    # heap goes in s10
+    lui  s10, %hi(heap)
+    addi s10, s10, %lo(heap)
 
-    # stack goes in x18
-    lui  x17, %hi(heap)
-    addi x17, x17, %lo(heap)
+    # stack goes in s11
+    lui  s11, %hi(heap)
+    addi s11, s11, %lo(heap)
 
     nop
     nop
@@ -25,7 +25,7 @@ _start:
     nop
     nop
     # jump to the nZone
-    jalr x16
+    jalr s9
     li x1, 42
     ecall
 
